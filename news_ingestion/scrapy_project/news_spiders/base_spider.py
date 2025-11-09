@@ -6,9 +6,11 @@ from news_spiders.items import NewsArticle
 class BaseNewsSpider(scrapy.Spider):
     custom_settings = {"DOWNLOAD_DELAY": 2}
 
-    def parse_article(self, response, metadata):
+    def parse_article(self, response):
+        metadata = response.meta
+
         article = NewsArticle()
-        article["source"] = metadata["source"]
+        article["source"] = metadata.get("source")
         article["source_url"] = response.url
         article["title"] = response.xpath("//h1/text()").get() or metadata.get("title")
         article["summary"] = response.xpath("//meta[@name='description']/@content").get()
@@ -19,8 +21,10 @@ class BaseNewsSpider(scrapy.Spider):
             response.xpath("//time/@datetime").get() or metadata.get("published_at")
         )
         article["authors"] = response.xpath("//meta[@name='author']/@content").getall()
-        article["tags"] = response.xpath("//meta[@name='keywords']/@content").get().split(",")
+        keywords = response.xpath("//meta[@name='keywords']/@content").get()
+        article["tags"] = keywords.split(",") if keywords else []
         article["status"] = "raw"
+
         yield article
 
     def parse_date(self, date_str):

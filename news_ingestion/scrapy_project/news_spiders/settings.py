@@ -4,6 +4,11 @@ NEWSPIDER_MODULE = "news_spiders"
 ROBOTSTXT_OBEY = True
 DOWNLOAD_DELAY = 2
 FEED_EXPORT_ENCODING = "utf-8"
+LOG_LEVEL = "INFO"
+LOG_ENABLED = True
+LOG_FORMAT = "%(levelname)s: %(message)s"
+LOG_DATEFORMAT = "%Y-%m-%d %H:%M:%S"
+
 
 ITEM_PIPELINES = {
     "news_spiders.pipelines.MinioKafkaPipeline": 300,
