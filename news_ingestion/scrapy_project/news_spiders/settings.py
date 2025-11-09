@@ -10,7 +10,7 @@ ITEM_PIPELINES = {
 }
 
 MINIO_CONFIG = {
-    "endpoint": "localhost:9000",
+    "endpoint": "minio:9000",
     "access_key": "minioadmin",
     "secret_key": "minioadmin",
     "bucket": "kerala-news",
@@ -18,6 +18,6 @@ MINIO_CONFIG = {
 }
 
 KAFKA_CONFIG = {
-    "bootstrap_servers": ["localhost:9092"],
-    "topic": "raw-articles",
+    "bootstrap_servers": ["kafka:9092"],
+    "topic": "awr-articles",
 }
