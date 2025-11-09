@@ -13,7 +13,7 @@ default_args = {
 with DAG(
     "onmanorama_ingest_dag",
     default_args=default_args,
-    schedule_interval="*/30 * * * *",  # every 30 minutes
+    schedule="*/30 * * * *",  # every 30 minutes
     catchup=False,
 ) as dag:
 
