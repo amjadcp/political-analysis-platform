@@ -33,24 +33,25 @@ class MinioKafkaPipeline:
         uid = str(uuid.uuid4())
         data["id"] = uid
         data["scraped_at"] = datetime.utcnow().isoformat()
+        
+        ## NOTE: 
+        # try:
+        #     # Prepare file path and payload
+        #     file_path = f"raw/onmanorama/{datetime.utcnow().strftime('%Y/%m/%d')}/{uid}.json"
+        #     json_bytes = json.dumps(data, ensure_ascii=False).encode("utf-8")
 
-        try:
-            # Prepare file path and payload
-            file_path = f"raw/onmanorama/{datetime.utcnow().strftime('%Y/%m/%d')}/{uid}.json"
-            json_bytes = json.dumps(data, ensure_ascii=False).encode("utf-8")
+        #     # ✅ Upload to MinIO
+        #     self.minio_client.put_object(
+        #         self.bucket_name,
+        #         file_path,
+        #         data=io.BytesIO(json_bytes),
+        #         length=len(json_bytes),
+        #         content_type="application/json",
+        #     )
+        #     logger.info(f"✅ Stored {file_path} in MinIO")
 
-            # ✅ Upload to MinIO
-            self.minio_client.put_object(
-                self.bucket_name,
-                file_path,
-                data=io.BytesIO(json_bytes),
-                length=len(json_bytes),
-                content_type="application/json",
-            )
-            logger.info(f"✅ Stored {file_path} in MinIO")
-
-        except Exception as e:
-            logger.error(f"❌ MinIO upload failed: {e}")
+        # except Exception as e:
+        #     logger.error(f"❌ MinIO upload failed: {e}")
 
         try:
             # ✅ Send to Kafka

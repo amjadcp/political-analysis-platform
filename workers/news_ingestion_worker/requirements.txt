@@ -1,0 +1,5 @@
+kafka-python
+minio
+redis
+psycopg2-binary
+backoff

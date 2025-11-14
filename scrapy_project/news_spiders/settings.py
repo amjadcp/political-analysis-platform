@@ -24,5 +24,5 @@ MINIO_CONFIG = {
 
 KAFKA_CONFIG = {
     "bootstrap_servers": ["kafka:9092"],
-    "topic": "awr-articles",
+    "topic": "raw-articles",
 }

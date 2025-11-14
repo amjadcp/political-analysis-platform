@@ -209,3 +209,4 @@ __marimo__/
 kafka-data/
 minio_data/
 postgres_data/
+redis_data/
