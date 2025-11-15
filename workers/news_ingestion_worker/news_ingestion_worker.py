@@ -27,6 +27,7 @@ from minio import Minio
 from minio.error import S3Error
 from backoff import on_exception, expo
 from typing import Optional
+from io import BytesIO
 
 # ---------------------------
 # Logging
@@ -39,7 +40,6 @@ logger = logging.getLogger("dedupe_worker")
 # ---------------------------
 KAFKA_BOOTSTRAP = os.getenv("KAFKA_BOOTSTRAP", "kafka:9092")
 KAFKA_TOPIC = os.getenv("KAFKA_TOPIC", "raw-articles")
-KAFKA_GROUP = os.getenv("KAFKA_GROUP", "dedupe-workers")
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/0")
 REDIS_TTL_SECONDS = int(os.getenv("REDIS_TTL_SECONDS", 60 * 60 * 24 * 90))  # 90 days
@@ -47,8 +47,8 @@ REDIS_TTL_SECONDS = int(os.getenv("REDIS_TTL_SECONDS", 60 * 60 * 24 * 90))  # 90
 PG_HOST = os.getenv("PG_HOST", "airflow_postgres")
 PG_PORT = int(os.getenv("PG_PORT", 5432))
 PG_DB = os.getenv("PG_DB", "articles")
-PG_USER = os.getenv("PG_USER", "postgres")
-PG_PASSWORD = os.getenv("PG_PASSWORD", "postgres")
+PG_USER = os.getenv("PG_USER", "airflow")
+PG_PASSWORD = os.getenv("PG_PASSWORD", "airflow")
 
 MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "minio:9000")
 MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
@@ -107,6 +107,38 @@ def make_minio_path(source: str, published_at_str: Optional[str], content_hash: 
     prefix = f"{MINIO_CURATED_PREFIX}/{src}/{yyyy}/{mm}/{dd}"
     return f"{prefix}/{content_hash}.json"
 
+def migrate_schema(pg_conn):
+    """
+    Ensure required tables and indexes exist.
+    Safe to run on each worker startup.
+    """
+    logger.info("Running DB migration check...")
+
+    create_table_sql = """
+    CREATE TABLE IF NOT EXISTS article_fingerprints (
+        id BIGSERIAL PRIMARY KEY,
+        content_hash VARCHAR(128) NOT NULL UNIQUE,
+        title_hash VARCHAR(128),
+        url TEXT,
+        source VARCHAR(255),
+        first_seen TIMESTAMP WITH TIME ZONE DEFAULT now(),
+        last_seen TIMESTAMP WITH TIME ZONE DEFAULT now(),
+        meta JSONB
+    );
+    """
+
+    create_index_sql = """
+    CREATE INDEX IF NOT EXISTS idx_article_fingerprints_last_seen
+    ON article_fingerprints (last_seen);
+    """
+
+    with pg_conn:
+        with pg_conn.cursor() as cur:
+            cur.execute(create_table_sql)
+            cur.execute(create_index_sql)
+
+    logger.info("DB migration complete.")
+
 # ---------------------------
 # Initialize clients
 # ---------------------------
@@ -138,10 +170,11 @@ if not minio_client.bucket_exists(MINIO_BUCKET):
 
 @on_exception(expo, (S3Error, Exception), max_tries=5)
 def minio_put_bytes(object_name: str, data_bytes: bytes, content_type: str = "application/json"):
+    data_stream = BytesIO(data_bytes)
     minio_client.put_object(
         MINIO_BUCKET,
         object_name,
-        data=data_bytes,
+        data=data_stream,
         length=len(data_bytes),
         content_type=content_type,
     )
@@ -174,7 +207,6 @@ logger.info("Setting up Kafka consumer (%s)...", KAFKA_BOOTSTRAP)
 consumer = KafkaConsumer(
     KAFKA_TOPIC,
     bootstrap_servers=[KAFKA_BOOTSTRAP],
-    group_id=KAFKA_GROUP,
     auto_offset_reset="latest",
     enable_auto_commit=True,
     value_deserializer=lambda v: json.loads(v.decode("utf-8")),
@@ -278,4 +310,5 @@ def main_loop():
         pg_conn.close()
 
 if __name__ == "__main__":
+    migrate_schema(pg_conn)
     main_loop()

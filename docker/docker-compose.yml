@@ -115,7 +115,7 @@ services:
       dockerfile: docker/news-ingestion.dockerfile
     container_name: news_ingestion_worker
     volumes:
-      - ./workers/news_ingestion_worker:/app/news_ingestion_worker
+      - ../workers/news_ingestion_worker:/app/news_ingestion_worker
     depends_on:
       - kafka
       - minio
