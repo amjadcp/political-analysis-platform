@@ -243,7 +243,7 @@ def process_message(msg_value: dict):
     # Fast check: Redis
     try:
         if redis_client.exists(redis_key):
-            logger.debug("Duplicate found in Redis (fast path): %s", content_hash)
+            logger.info("Duplicate found in Redis (fast path): %s", content_hash)
             return  # skip duplicate
     except Exception as e:
         logger.exception("Redis check failed: %s", e)
