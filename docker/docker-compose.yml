@@ -12,7 +12,7 @@ services:
       MINIO_ROOT_PASSWORD: minioadmin
     command: server /data --console-address ":9001"
     volumes:
-      - ./minio_data:/data
+      - ./volumes/minio_data:/data
 
   # 2. Kafka
   kafka:
@@ -47,7 +47,7 @@ services:
       # Logging
       KAFKA_LOG_DIRS: /var/lib/kafka/data
     volumes:
-      - ./kafka-data:/var/lib/kafka/data
+      - ./volumes/kafka-data:/var/lib/kafka/data
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -70,7 +70,7 @@ services:
       POSTGRES_PASSWORD: airflow
       POSTGRES_DB: airflow
     volumes:
-      - ./postgres_data:/var/lib/postgresql/
+      - ./volumes/postgres_data:/var/lib/postgresql
 
   # 4. Redis      
   redis:
@@ -80,7 +80,7 @@ services:
       - "6379:6379"
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
-      - ./redis_data:/data
+      - ./volumes/redis_data:/data
 
 
   # 5. Airflow + Scrapy Environment
@@ -122,3 +122,29 @@ services:
       - postgres
     command: python /app/news_ingestion_worker/news_ingestion_worker.py
     restart: unless-stopped
+  
+  # 6. Hive Metastore Service
+  hive-metastore:
+    image: apache/hive:4.0.1
+    container_name: hive-metastore
+    depends_on:
+      - postgres
+    environment:
+      HIVE_METASTORE_DATABASE_HOST: postgres
+      HIVE_METASTORE_DATABASE_PORT_NUMBER: 5432
+      HIVE_METASTORE_DATABASE_NAME: metastore
+      HIVE_METASTORE_DATABASE_USER: ${DB_USER:-airflow}
+      HIVE_METASTORE_DATABASE_PASSWORD: ${DB_PASSWORD:-airflow}
+    ports:
+      - "9083:9083"
+
+  # 7. Trino Query Engine
+  trino:
+    image: trinodb/trino:latest
+    container_name: trino
+    depends_on:
+      - hive-metastore
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./trino/etc/catalog:/etc/trino/catalog

@@ -206,7 +206,4 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-kafka-data/
-minio_data/
-postgres_data/
-redis_data/
+volumes/
