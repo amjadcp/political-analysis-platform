@@ -125,18 +125,24 @@ services:
   
   # 6. Hive Metastore Service
   hive-metastore:
-    image: apache/hive:4.0.1
+    image: bitsondatadev/hive-metastore:latest
     container_name: hive-metastore
     depends_on:
       - postgres
     environment:
-      HIVE_METASTORE_DATABASE_HOST: postgres
-      HIVE_METASTORE_DATABASE_PORT_NUMBER: 5432
-      HIVE_METASTORE_DATABASE_NAME: metastore
-      HIVE_METASTORE_DATABASE_USER: ${DB_USER:-airflow}
-      HIVE_METASTORE_DATABASE_PASSWORD: ${DB_PASSWORD:-airflow}
+      METASTORE_DB_TYPE: postgres
+      METASTORE_DB_HOSTNAME: postgres
+      METASTORE_DB_PORT: 5432
+      METASTORE_DB_NAME: metastore
+      METASTORE_DB_USER: ${DB_USER:-airflow}
+      METASTORE_DB_PASSWORD: ${DB_PASSWORD:-airflow}
     ports:
       - "9083:9083"
+    volumes:
+      - ./hive-metastore/conf/metastore-site.xml:/opt/apache-hive-metastore-3.0.0-bin/conf/metastore-site.xml
+      - ./hive-metastore/lib/postgresql-42.7.8.jar:/opt/apache-hive-metastore-3.0.0-bin/lib/postgresql-42.7.8.jar
+      - ./hive-metastore/entrypoint.sh:/entrypoint.sh
+    entrypoint: ["/entrypoint.sh"]
 
   # 7. Trino Query Engine
   trino:
