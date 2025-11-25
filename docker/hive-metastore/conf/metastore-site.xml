@@ -67,6 +67,10 @@ likely need to add a number of new values. -->
         <value>org.apache.hadoop.fs.s3a.S3AFileSystem</value>
     </property>
     <property>
+        <name>fs.s3a.connection.ssl.enabled</name>
+        <value>false</value>
+    </property>
+    <property>
         <name>fs.s3a.access.key</name>
         <value>minioadmin</value>
     </property>
