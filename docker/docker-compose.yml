@@ -124,34 +124,14 @@ services:
       - postgres
     command: python /app/news_ingestion_worker/news_ingestion_worker.py
     restart: unless-stopped
-  
-  # 6. Hive Metastore Service
-  hive-metastore:
-    image: bitsondatadev/hive-metastore:latest
-    container_name: hive-metastore
-    depends_on:
-      - postgres
-    environment:
-      METASTORE_DB_TYPE: postgres
-      METASTORE_DB_HOSTNAME: postgres
-      METASTORE_DB_PORT: 5432
-      METASTORE_DB_NAME: metastore
-      METASTORE_DB_USER: ${DB_USER:-airflow}
-      METASTORE_DB_PASSWORD: ${DB_PASSWORD:-airflow}
-    ports:
-      - "9083:9083"
-    volumes:
-      - ./hive-metastore/conf/metastore-site.xml:/opt/apache-hive-metastore-3.0.0-bin/conf/metastore-site.xml
-      - ./hive-metastore/lib/postgresql-42.7.8.jar:/opt/apache-hive-metastore-3.0.0-bin/lib/postgresql-42.7.8.jar
-      - ./hive-metastore/entrypoint.sh:/entrypoint.sh
-    entrypoint: ["/entrypoint.sh"]
 
-  # 7. Trino Query Engine
+  # 6. Trino Query Engine
   trino:
     image: trinodb/trino:latest
     container_name: trino
     depends_on:
-      - hive-metastore
+      - postgres
+      - minio
     ports:
       - "8081:8080"
     volumes:

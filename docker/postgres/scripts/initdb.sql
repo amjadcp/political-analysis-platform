@@ -14,9 +14,9 @@ BEGIN
    END IF;
 
    IF NOT EXISTS (
-      SELECT FROM pg_database WHERE datname = 'metastore'
+      SELECT FROM pg_database WHERE datname = 'iceberg'
    ) THEN
-      PERFORM dblink_exec(conn_str, 'CREATE DATABASE metastore');
+      PERFORM dblink_exec(conn_str, 'CREATE DATABASE iceberg');
    END IF;
 END;
 $do$;
