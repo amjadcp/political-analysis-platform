@@ -70,7 +70,9 @@ services:
       POSTGRES_PASSWORD: airflow
       POSTGRES_DB: airflow
     volumes:
-      - ./volumes/postgres_data:/var/lib/postgresql
+      - ./postgres/data:/var/lib/postgresql/data
+      - ./postgres/scripts:/scripts
+    entrypoint: ["/scripts/initdb.sh"]
 
   # 4. Redis      
   redis:
@@ -141,11 +143,6 @@ services:
     volumes:
       - ./hive-metastore/conf/metastore-site.xml:/opt/apache-hive-metastore-3.0.0-bin/conf/metastore-site.xml
       - ./hive-metastore/lib/postgresql-42.7.8.jar:/opt/apache-hive-metastore-3.0.0-bin/lib/postgresql-42.7.8.jar
-      - ./hive-metastore/lib/aws-java-sdk-bundle-1.11.375.jar:/opt/apache-hive-metastore-3.0.0-bin/lib/aws-java-sdk-bundle-1.11.375.jar
-      - ./hive-metastore/lib/hadoop-auth-3.2.4.jar:/opt/apache-hive-metastore-3.0.0-bin/lib/hadoop-auth-3.2.4.jar
-      - ./hive-metastore/lib/hadoop-aws-3.2.4.jar:/opt/apache-hive-metastore-3.0.0-bin/lib/hadoop-aws-3.2.4.jar
-      - ./hive-metastore/lib/hadoop-common-3.2.4.jar:/opt/apache-hive-metastore-3.0.0-bin/lib/hadoop-common-3.2.4.jar
-      - ./hive-metastore/lib/hadoop-hdfs-3.2.4.jar:/opt/apache-hive-metastore-3.0.0-bin/lib/hadoop-hdfs-3.2.4.jar
       - ./hive-metastore/entrypoint.sh:/entrypoint.sh
     entrypoint: ["/entrypoint.sh"]
 
